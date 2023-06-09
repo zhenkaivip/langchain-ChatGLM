@@ -368,19 +368,17 @@ async def stream_chat(websocket: WebSocket):
         for extent_answer_result in local_doc_qa.llm.generatorAnswer(prompt=extent_prompt, history=[], streaming=False):
             raw_extend_questions = extent_answer_result.llm_output["answer"].split('\n')
         extend_questions = check_and_trim_questions(raw_extend_questions)
-
-        await websocket.send_text(
-            json.dumps(
-                {
-                    "question": question,
-                    "response": resp["result"],
-                    "flag": "end",
-                    "sources_documents": source_documents,
-                    "extend_questions": extend_questions,
-                },
-                ensure_ascii=False,
-            )
+        final_result = json.dumps(
+            {
+                "question": question,
+                "response": resp["result"],
+                "flag": "end",
+                "sources_documents": source_documents,
+                "extend_questions": extend_questions,
+            },
+            ensure_ascii=False,
         )
+        await websocket.send_text(final_result)
 
 
 async def document():
