@@ -297,6 +297,7 @@ class LocalDocQA:
         vector_store.chunk_size = self.chunk_size
         vector_store.chunk_conent = self.chunk_conent
         vector_store.score_threshold = self.score_threshold
+        query = query.strip()
         related_docs_with_score = vector_store.similarity_search_with_score(query, k=self.top_k)
         torch_gc()
         if len(related_docs_with_score) > 0:
