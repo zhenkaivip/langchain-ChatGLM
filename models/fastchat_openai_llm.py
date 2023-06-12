@@ -10,6 +10,13 @@ from typing import (
     Collection,
     Dict
 )
+import tiktoken
+
+
+def get_token_len(test_str):
+    enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
+    result = enc.encode(test_str)
+    return len(result)
 
 
 def _build_message_template() -> Dict[str, str]:
@@ -73,6 +80,8 @@ class FastChatOpenAILLM(RemoteRpcModel, LLM, ABC):
 
     # 将历史对话数组转换为文本格式
     def build_message_list(self, query) -> Collection[Dict[str, str]]:
+        if get_token_len(query) > 2000:
+            query = '你好'
         build_message_list: Collection[Dict[str, str]] = []
         history = self.history[-self.history_len:] if self.history_len > 0 else []
         for i, (old_query, response) in enumerate(history):
@@ -89,6 +98,7 @@ class FastChatOpenAILLM(RemoteRpcModel, LLM, ABC):
         user_build_message['role'] = 'user'
         user_build_message['content'] = query
         build_message_list.append(user_build_message)
+
         return build_message_list
 
     def generatorAnswer(self, prompt: str,
@@ -110,7 +120,8 @@ class FastChatOpenAILLM(RemoteRpcModel, LLM, ABC):
             for stream_resp in openai.ChatCompletion.create(
                     model=self.model_name,
                     messages=self.build_message_list(prompt),
-                    stream=True
+                    stream=True,
+                    max_tokens=1024
             ):
                 final_resp += stream_resp.choices[0].delta.get('content', '')
                 history[-1] = [prompt, final_resp]
@@ -122,7 +133,8 @@ class FastChatOpenAILLM(RemoteRpcModel, LLM, ABC):
             # create a chat completion
             completion = openai.ChatCompletion.create(
                 model=self.model_name,
-                messages=self.build_message_list(prompt)
+                messages=self.build_message_list(prompt),
+                max_tokens=1024
             )
 
             history += [[prompt, completion.choices[0].message.content]]
