@@ -122,11 +122,15 @@ def similarity_search_with_score_by_vector(
         self, embedding: List[float], k: int = 4
 ) -> List[Tuple[Document, float]]:
     scores, indices = self.index.search(np.array([embedding], dtype=np.float32), k)
+    cur_score_threshold = self.score_threshold
+    if scores[0] <= 50:
+        # 已经有非常匹配的了，就限制的比较严格
+        cur_score_threshold = 50
     docs = []
     id_dict = {}
     store_len = len(self.index_to_docstore_id)
     for j, i in enumerate(indices[0]):
-        if i == -1 or 0 < self.score_threshold < scores[0][j]:
+        if i == -1 or 0 < cur_score_threshold < scores[0][j]:
             # This happens when not enough docs are returned.
             continue
         _id = self.index_to_docstore_id[i]
@@ -155,7 +159,7 @@ def similarity_search_with_score_by_vector(
                 break
     if not self.chunk_conent:
         return docs
-    if len(id_dict) == 0 and self.score_threshold > 0:
+    if len(id_dict) == 0 and cur_score_threshold > 0:
         return []
     id_lists = seperate_list(id_dict)
     for id_seq in id_lists:
