@@ -123,7 +123,7 @@ def similarity_search_with_score_by_vector(
 ) -> List[Tuple[Document, float]]:
     scores, indices = self.index.search(np.array([embedding], dtype=np.float32), k)
     cur_score_threshold = self.score_threshold
-    if scores and scores[0] and scores[0][0] <= 50:
+    if len(scores) > 0 and int(scores[0][0]) <= 50:
         # 已经有非常匹配的了，就限制的比较严格
         cur_score_threshold = 50
     docs = []
