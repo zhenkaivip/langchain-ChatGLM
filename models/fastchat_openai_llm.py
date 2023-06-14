@@ -80,7 +80,7 @@ class FastChatOpenAILLM(RemoteRpcModel, LLM, ABC):
 
     # 将历史对话数组转换为文本格式
     def build_message_list(self, query) -> Collection[Dict[str, str]]:
-        if get_token_len(query) > 2000:
+        if get_token_len(query) > 10000:  # 16k version
             query = '你好'
         build_message_list: Collection[Dict[str, str]] = []
         history = self.history[-self.history_len:] if self.history_len > 0 else []
@@ -121,7 +121,7 @@ class FastChatOpenAILLM(RemoteRpcModel, LLM, ABC):
                     model=self.model_name,
                     messages=self.build_message_list(prompt),
                     stream=True,
-                    max_tokens=1024
+                    max_tokens=2048
             ):
                 final_resp += stream_resp.choices[0].delta.get('content', '')
                 history[-1] = [prompt, final_resp]
@@ -134,7 +134,7 @@ class FastChatOpenAILLM(RemoteRpcModel, LLM, ABC):
             completion = openai.ChatCompletion.create(
                 model=self.model_name,
                 messages=self.build_message_list(prompt),
-                max_tokens=1024
+                max_tokens=2048
             )
 
             history += [[prompt, completion.choices[0].message.content]]
