@@ -89,7 +89,7 @@ class FastChatOpenAILLM(RemoteRpcModel, LLM, ABC):
             user_build_message['role'] = 'user'
             user_build_message['content'] = old_query
             system_build_message = _build_message_template()
-            system_build_message['role'] = 'system'
+            system_build_message['role'] = 'assistant'
             system_build_message['content'] = response
             build_message_list.append(user_build_message)
             build_message_list.append(system_build_message)
