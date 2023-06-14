@@ -14,7 +14,7 @@ import tiktoken
 
 
 def get_token_len(test_str):
-    enc = tiktoken.encoding_for_model("gpt-3.5-turbo")
+    enc = tiktoken.encoding_for_model("gpt-3.5-turbo-16k-0613")
     result = enc.encode(test_str)
     return len(result)
 
