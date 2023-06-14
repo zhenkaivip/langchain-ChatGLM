@@ -36,7 +36,7 @@ class FastChatOpenAILLM(RemoteRpcModel, LLM, ABC):
     temperature: float = 0.01
     top_p = 0.9
     checkPoint: LoaderCheckPoint = None
-    history = []
+    # history = []
     history_len: int = 10
 
     def __init__(self, checkPoint: LoaderCheckPoint = None):
@@ -79,11 +79,11 @@ class FastChatOpenAILLM(RemoteRpcModel, LLM, ABC):
         pass
 
     # 将历史对话数组转换为文本格式
-    def build_message_list(self, query) -> Collection[Dict[str, str]]:
+    def build_message_list(self, query, history) -> Collection[Dict[str, str]]:
         if get_token_len(query) > 10000:  # 16k version
             query = '你好'
         build_message_list: Collection[Dict[str, str]] = []
-        history = self.history[-self.history_len:] if self.history_len > 0 else []
+        history = history[-self.history_len:] if self.history_len > 0 else []
         for i, (old_query, response) in enumerate(history):
             user_build_message = _build_message_template()
             user_build_message['role'] = 'user'
@@ -119,7 +119,7 @@ class FastChatOpenAILLM(RemoteRpcModel, LLM, ABC):
             final_resp = ""
             for stream_resp in openai.ChatCompletion.create(
                     model=self.model_name,
-                    messages=self.build_message_list(prompt),
+                    messages=self.build_message_list(prompt, history[:-1]),
                     stream=True,
                     max_tokens=2048
             ):
@@ -133,7 +133,7 @@ class FastChatOpenAILLM(RemoteRpcModel, LLM, ABC):
             # create a chat completion
             completion = openai.ChatCompletion.create(
                 model=self.model_name,
-                messages=self.build_message_list(prompt),
+                messages=self.build_message_list(prompt, history),
                 max_tokens=2048
             )
 
