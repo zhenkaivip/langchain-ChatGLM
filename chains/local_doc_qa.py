@@ -35,6 +35,10 @@ def load_vector_store(vs_path, embeddings):
     return FAISS.load_local(vs_path, embeddings)
 
 
+def is_markdown_table(line):
+    return len(line) > 2 and line.startswith('|') and line.endswith('|')
+
+
 def tree(filepath, ignore_dir_names=None, ignore_file_names=None):
     """返回两个列表，第一个列表为 filepath 下全部文件的完整路径, 第二个为对应的文件名"""
     if ignore_dir_names is None:
@@ -99,7 +103,7 @@ def write_check_file(filepath, docs):
 def generate_prompt(related_docs: List[str],
                     query: str,
                     prompt_template: str = PROMPT_TEMPLATE, ) -> str:
-    context = "\n".join([doc.page_content for doc in related_docs])
+    context = "\n====\n".join([doc.page_content for doc in related_docs])
     prompt = prompt_template.replace("{question}", query).replace("{context}", context)
     return prompt
 
@@ -153,7 +157,10 @@ def similarity_search_with_score_by_vector(
                         break_flag = True
                         break
                     elif doc0.metadata["source"] == doc.metadata["source"]:
-                        docs_len += len(doc0.page_content)
+                        if is_markdown_table(doc0.page_content):
+                            docs_len += 2
+                        else:
+                            docs_len += len(doc0.page_content)
                         id_dict[l] = doc.metadata["source"]
             if break_flag:
                 break
